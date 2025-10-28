@@ -1,0 +1,63 @@
+# Prometheus Configuration for Agricultural AI System
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Agricultural AI Backend
+  - job_name: 'agricultural-ai-backend'
+    static_configs:
+      - targets: ['backend:8000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # MCP Server
+  - job_name: 'mcp-server'
+    static_configs:
+      - targets: ['mcp-server:10000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # MongoDB Exporter
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Nginx Metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+
+  # Custom Application Metrics
+  - job_name: 'agricultural-ai-metrics'
+    static_configs:
+      - targets: ['backend:8000']
+    metrics_path: '/api/metrics/prometheus'
+    scrape_interval: 5s
+    params:
+      format: ['prometheus']

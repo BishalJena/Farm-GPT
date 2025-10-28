@@ -1,0 +1,48 @@
+# Backend - not deployed to Vercel
+backend/
+fs-gate/
+monitoring/
+nginx/
+ssl/
+logs/
+letsencrypt/
+scripts/
+tests/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+
+# Build artifacts
+*.pyc
+*.pyo
+*.log
+
+# Documentation
+*.md
+!README.md
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

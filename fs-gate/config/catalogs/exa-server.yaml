@@ -1,0 +1,16 @@
+name: exa
+description: "EXA MCP server for web search and content retrieval"
+version: "1.0.0"
+runtime:
+  image: exa-mcp:latest
+  command: ["uvx", "exa-mcp"]
+config:
+  env:
+    - name: EXA_API_KEY
+      required: true
+      description: "994ef702-ffbf-40f7-bc18-e9464e84152f"
+capabilities:
+  tools: true
+metadata:
+  tags: ["search", "web", "content", "retrieval"]
+  author: "Production Chatbot Team"

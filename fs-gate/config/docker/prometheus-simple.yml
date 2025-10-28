@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'agricultural-ai'
+    static_configs:
+      - targets: ['agricultural-ai:10000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'mcp-gateway'
+    static_configs:
+      - targets: ['mcp-gateway:8811']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 60s

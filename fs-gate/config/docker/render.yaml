@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: agricultural-ai-mcp
+    runtime: docker
+    repo: https://github.com/BishalJena/fs-gate.git
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATAGOVIN_API_KEY
+        value: 579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b
+      - key: EXA_API_KEY  
+        value: 994ef702-ffbf-40f7-bc18-e9464e84152f
+      - key: DATAGOVIN_RESOURCE_ID
+        value: 35985678-0d79-46b4-9ed6-6f13308a1d24
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+    healthCheckPath: /health

@@ -1,0 +1,102 @@
+# Docker Compose for Cloud Deployment (DigitalOcean, AWS, GCP)
+version: '3.8'
+
+services:
+  # Docker MCP Gateway - Production Configuration
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    container_name: agricultural-mcp-gateway-prod
+    ports:
+      - "8811:8811"
+      - "80:8811"  # HTTP access
+    environment:
+      - DOCKER_MCP_METRICS_INTERVAL=60
+      - NODE_ENV=production
+    volumes:
+      - ./agricultural-ai-catalog.yaml:/catalogs/agricultural-ai.yaml:ro
+      - ./secrets:/secrets:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: 
+      - --catalog=/catalogs/agricultural-ai.yaml
+      - --servers=agricultural-ai-unified
+      - --transport=sse
+      - --port=8811
+      - --use-configured-catalogs
+    restart: always
+    depends_on:
+      - agricultural-ai-server
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Agricultural AI MCP Server - Production
+  agricultural-ai-server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: agricultural-ai-mcp-server-prod
+    ports:
+      - "10000:10000"
+    environment:
+      - NODE_ENV=production
+      - PORT=10000
+      - DATAGOVIN_API_KEY=${DATAGOVIN_API_KEY}
+      - EXA_API_KEY=${EXA_API_KEY}
+      - DATAGOVIN_RESOURCE_ID=${DATAGOVIN_RESOURCE_ID:-35985678-0d79-46b4-9ed6-6f13308a1d24}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy for SSL and Load Balancing
+  nginx:
+    image: nginx:alpine
+    container_name: agricultural-mcp-nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - mcp-gateway
+      - agricultural-ai-server
+    restart: always
+    networks:
+      - mcp-network
+
+  # Redis for caching (optional but recommended for production)
+  redis:
+    image: redis:alpine
+    container_name: agricultural-mcp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+    networks:
+      - mcp-network
+    command: redis-server --appendonly yes
+
+networks:
+  mcp-network:
+    driver: bridge
+    name: agricultural-mcp-network-prod
+
+volumes:
+  redis-data:
+    name: agricultural-mcp-redis-data

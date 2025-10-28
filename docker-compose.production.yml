@@ -1,0 +1,358 @@
+# Production-Ready Docker Compose Configuration
+# Complete Agricultural AI System with Monitoring and Logging
+
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: agricultural-ai-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-agricultural-ai-2024}
+      MONGO_INITDB_DATABASE: farmchat
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - agricultural-ai-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache (for session management and caching)
+  redis:
+    image: redis:7.2-alpine
+    container_name: agricultural-ai-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-agricultural-ai-cache-2024}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - agricultural-ai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MCP Tools Server
+  mcp-server:
+    build:
+      context: ./fs-gate
+      dockerfile: Dockerfile
+    container_name: agricultural-ai-mcp-server
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=10000
+      - DATAGOVIN_API_KEY=${DATAGOVIN_API_KEY}
+      - EXA_API_KEY=${EXA_API_KEY}
+    ports:
+      - "10000:10000"
+    networks:
+      - agricultural-ai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - mongodb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mcp-server.rule=Host(`mcp.agricultural-ai.local`)"
+      - "traefik.http.services.mcp-server.loadbalancer.server.port=10000"
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agricultural-ai-backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=production
+      - MONGO_URL=mongodb://admin:${MONGO_ROOT_PASSWORD:-agricultural-ai-2024}@mongodb:27017/farmchat?authSource=admin
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-agricultural-ai-cache-2024}@redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-change-this-in-production-super-secret-key}
+      - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+      - MCP_GATEWAY_URL=http://mcp-server:10000
+      - DATAGOVIN_API_KEY=${DATAGOVIN_API_KEY}
+      - EXA_API_KEY=${EXA_API_KEY}
+      - CORS_ORIGINS=http://localhost:3000,https://agricultural-ai.local,https://*.agricultural-ai.com
+      - LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
+    networks:
+      - agricultural-ai-network
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.agricultural-ai.local`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=http://api.agricultural-ai.local
+        - REACT_APP_VERSION=${APP_VERSION:-1.0.0}
+        - REACT_APP_ENVIRONMENT=production
+    container_name: agricultural-ai-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - agricultural-ai-network
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`agricultural-ai.local`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: agricultural-ai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - agricultural-ai-network
+    depends_on:
+      - frontend
+      - backend
+      - mcp-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: agricultural-ai-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - agricultural-ai-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.agricultural-ai.local`)"
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: agricultural-ai-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-agricultural-ai-2024}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - agricultural-ai-network
+    depends_on:
+      - prometheus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.agricultural-ai.local`)"
+
+  # ELK Stack for Logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: agricultural-ai-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - agricultural-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.10.0
+    container_name: agricultural-ai-logstash
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logs:/usr/share/logstash/logs:ro
+    ports:
+      - "5044:5044"
+    networks:
+      - agricultural-ai-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.0
+    container_name: agricultural-ai-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - agricultural-ai-network
+    depends_on:
+      - elasticsearch
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kibana.rule=Host(`kibana.agricultural-ai.local`)"
+
+  # Traefik Load Balancer
+  traefik:
+    image: traefik:v3.0
+    container_name: agricultural-ai-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=admin@agricultural-ai.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - agricultural-ai-network
+
+  # Health Check Service
+  healthcheck:
+    image: alpine:3.18
+    container_name: agricultural-ai-healthcheck
+    restart: unless-stopped
+    command: |
+      sh -c '
+        apk add --no-cache curl
+        while true; do
+          echo "=== Health Check Report $(date) ==="
+          echo "Frontend: $$(curl -s -o /dev/null -w "%{http_code}" http://frontend:80/health || echo "FAIL")"
+          echo "Backend: $$(curl -s -o /dev/null -w "%{http_code}" http://backend:8000/api/health || echo "FAIL")"
+          echo "MCP Server: $$(curl -s -o /dev/null -w "%{http_code}" http://mcp-server:10000/health || echo "FAIL")"
+          echo "MongoDB: $$(curl -s -o /dev/null -w "%{http_code}" http://mongodb:27017 || echo "FAIL")"
+          echo "Redis: $$(redis-cli -h redis -a ${REDIS_PASSWORD:-agricultural-ai-cache-2024} ping || echo "FAIL")"
+          echo "=================================="
+          sleep 300  # Check every 5 minutes
+        done
+      '
+    networks:
+      - agricultural-ai-network
+    depends_on:
+      - frontend
+      - backend
+      - mcp-server
+      - mongodb
+      - redis
+
+# Networks
+networks:
+  agricultural-ai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volumes
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+# Environment Variables Template
+# Create a .env file with these variables:
+#
+# # Database
+# MONGO_ROOT_PASSWORD=your-secure-mongo-password
+# REDIS_PASSWORD=your-secure-redis-password
+#
+# # Authentication
+# JWT_SECRET=your-super-secret-jwt-key-change-in-production
+#
+# # AI Services
+# CEREBRAS_API_KEY=your-cerebras-api-key
+# DATAGOVIN_API_KEY=your-datagovin-api-key
+# EXA_API_KEY=your-exa-api-key
+#
+# # Monitoring
+# GRAFANA_USER=admin
+# GRAFANA_PASSWORD=your-grafana-password
+#
+# # Application
+# APP_VERSION=1.0.0

@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Docker MCP Gateway
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    container_name: agricultural-mcp-gateway
+    ports:
+      - "8811:8811"
+    environment:
+      - DOCKER_MCP_METRICS_INTERVAL=30
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./agricultural-ai-catalog.yaml:/catalogs/agricultural-ai.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.docker:/root/.docker:ro
+    command: 
+      - --transport=sse
+      - --port=8811
+      - --verbose
+    restart: unless-stopped
+    depends_on:
+      - agricultural-ai-server
+    networks:
+      - mcp-network
+
+  # Agricultural AI MCP Server
+  agricultural-ai-server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: agricultural-ai-mcp-server
+    ports:
+      - "10001:10000"
+    environment:
+      - NODE_ENV=production
+      - PORT=10000
+      - DATAGOVIN_API_KEY=${DATAGOVIN_API_KEY}
+      - EXA_API_KEY=${EXA_API_KEY}
+      - DATAGOVIN_RESOURCE_ID=${DATAGOVIN_RESOURCE_ID:-35985678-0d79-46b4-9ed6-6f13308a1d24}
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - mcp-network
+
+  # Optional: Monitoring with Prometheus (for production)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: agricultural-mcp-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - mcp-network
+    profiles:
+      - monitoring
+
+  # Optional: Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: agricultural-mcp-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    restart: unless-stopped
+    networks:
+      - mcp-network
+    profiles:
+      - monitoring
+
+networks:
+  mcp-network:
+    driver: bridge
+    name: agricultural-mcp-network
+
+volumes:
+  grafana-storage:
+    name: agricultural-mcp-grafana-storage

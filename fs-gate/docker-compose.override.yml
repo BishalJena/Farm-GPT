@@ -1,0 +1,15 @@
+# Docker Compose Override for Local Development
+# This file allows you to override settings without modifying the main docker-compose.yml
+
+version: '3.8'
+
+services:
+  agricultural-ai-server:
+    environment:
+      # Override API keys here for local development
+      - DATAGOVIN_API_KEY=${DATAGOVIN_API_KEY:-your-default-api-key}
+      - EXA_API_KEY=${EXA_API_KEY:-your-default-exa-key}
+      - DATAGOVIN_RESOURCE_ID=${DATAGOVIN_RESOURCE_ID:-35985678-0d79-46b4-9ed6-6f13308a1d24}
+    # Uncomment for development debugging
+    # ports:
+    #   - "10000:10000"  # Direct access to server for debugging

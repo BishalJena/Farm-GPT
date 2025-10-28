@@ -1,0 +1,20 @@
+name: crop-price
+description: "Production MCP server for fetching Indian crop price data from data.gov.in with state/district/commodity filters"
+version: "1.0.0"
+runtime:
+  image: crop-price-mcp:latest
+  command: ["node", "dist/server.js"]
+config:
+  env:
+    - name: DATAGOVIN_API_KEY
+      required: true
+      description: "API key from data.gov.in for accessing crop price dataset"
+    - name: DATAGOVIN_RESOURCE_ID
+      required: false
+      default: "35985678-0d79-46b4-9ed6-6f13308a1d24"
+      description: "Resource ID for the crop price dataset"
+capabilities:
+  tools: true
+metadata:
+  tags: ["agriculture", "data", "india", "prices", "api"]
+  author: "Production Chatbot Team"

@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Intelligent MCP Gateway - Fast & Creative
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    container_name: agricultural-mcp-gateway
+    ports:
+      - "8811:8811"  # MCP Gateway
+      - "8812:8812"  # WebSocket
+    environment:
+      - DOCKER_MCP_INTELLIGENT_ROUTING=true
+      - DOCKER_MCP_AUTO_SCALING=true
+      - DOCKER_MCP_HEALTH_MONITORING=true
+      - HACKATHON_DEMO_MODE=true
+    volumes:
+      - ./agricultural-catalog.yaml:/catalog.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - --catalog=/catalog.yaml
+      - --intelligent-routing
+      - --auto-scale
+      - --transport=sse,websocket
+      - --port=8811
+      - --websocket-port=8812
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8811/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mcp-network
+
+  # Agricultural AI Server - Enhanced
+  agricultural-ai:
+    build: .
+    container_name: agricultural-ai-server
+    ports:
+      - "10001:10000"
+    environment:
+      - NODE_ENV=production
+      - INTELLIGENCE_LEVEL=advanced
+      - CACHE_ENABLED=true
+      - REDIS_URL=redis://redis:6379
+      - HACKATHON_DEMO_MODE=true
+    env_file:
+      - .env
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+
+  # Redis Cache - Fast Performance
+  redis:
+    image: redis:alpine
+    container_name: agricultural-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mcp-network
+
+  # Prometheus Monitoring - Essential Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: agricultural-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-simple.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+    restart: always
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+    name: agricultural-mcp-network

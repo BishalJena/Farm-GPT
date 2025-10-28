@@ -1,0 +1,264 @@
+# DigitalOcean App Platform Configuration for CropGPT
+# Documentation: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+
+name: cropgpt
+region: nyc  # Change to: nyc, sfo, ams, sgp, fra, blr
+
+# Backend Service
+services:
+  - name: backend
+    github:
+      repo: BishalJena/CropGPT
+      branch: main
+      deploy_on_push: true
+    
+    source_dir: /backend
+    
+    build_command: pip install -r requirements.txt
+    
+    run_command: uvicorn server:app --host 0.0.0.0 --port 8080
+    
+    http_port: 8080
+    
+    instance_count: 1
+    instance_size_slug: basic-xs  # $12/month (or basic-s for $24/month)
+    
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    
+    routes:
+      - path: /api
+    
+    envs:
+      # Database - Add these manually or link from DO Managed Database
+      - key: MONGO_URL
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually in dashboard
+      
+      - key: DB_NAME
+        scope: RUN_TIME
+        value: farmchat
+      
+      # Redis - Add these manually or link from DO Managed Database
+      - key: REDIS_URL
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually in dashboard
+      
+      # Authentication - Generate 32-char random string
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        # Generate: python -c "import secrets; print(secrets.token_urlsafe(32))"
+      
+      - key: JWT_EXPIRATION_HOURS
+        scope: RUN_TIME
+        value: "24"
+      
+      # AI Service API Keys - Add your actual keys
+      - key: CEREBRAS_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually in dashboard
+      
+      - key: OPENROUTER_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually (optional)
+      
+      - key: DEEPGRAM_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually (optional)
+      
+      # External API Keys
+      - key: EXA_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually (optional)
+      
+      - key: DATAGOVIN_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually (optional)
+      
+      # MCP Gateway - Auto-populated with mcp-gateway service URL
+      - key: MCP_GATEWAY_URL
+        scope: RUN_TIME
+        value: ${mcp-gateway.PUBLIC_URL}
+      
+      # CORS - Update after frontend deployment
+      - key: CORS_ORIGINS
+        scope: RUN_TIME
+        value: ${APP_URL},${_self.PUBLIC_URL}
+      
+      # Server Configuration
+      - key: ENVIRONMENT
+        scope: RUN_TIME
+        value: production
+      
+      - key: LOG_LEVEL
+        scope: RUN_TIME
+        value: INFO
+      
+      - key: PORT
+        scope: RUN_TIME
+        value: "8080"
+
+# Frontend Static Site
+static_sites:
+  - name: frontend
+    github:
+      repo: BishalJena/CropGPT
+      branch: main
+      deploy_on_push: true
+    
+    source_dir: /frontend
+    
+    build_command: npm install --legacy-peer-deps && npm run build
+    
+    output_dir: build
+    
+    routes:
+      - path: /
+    
+    envs:
+      # Backend URL - Auto-populated with backend service URL
+      - key: REACT_APP_BACKEND_URL
+        scope: BUILD_TIME
+        value: ${backend.PUBLIC_URL}
+      
+      # App Configuration
+      - key: REACT_APP_VERSION
+        scope: BUILD_TIME
+        value: 1.0.0
+      
+      - key: REACT_APP_ENVIRONMENT
+        scope: BUILD_TIME
+        value: production
+      
+      # Feature Flags
+      - key: REACT_APP_ENABLE_VOICE
+        scope: BUILD_TIME
+        value: "true"
+      
+      - key: REACT_APP_ENABLE_WORKFLOWS
+        scope: BUILD_TIME
+        value: "true"
+      
+      - key: REACT_APP_ENABLE_MARKETPLACE
+        scope: BUILD_TIME
+        value: "true"
+      
+      - key: REACT_APP_ENABLE_SCHEMES
+        scope: BUILD_TIME
+        value: "true"
+    
+    catchall_document: index.html  # For React Router
+    
+    cors:
+      allow_origins:
+        - prefix: https://
+      allow_methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allow_headers:
+        - Content-Type
+        - Authorization
+        - X-Requested-With
+
+  # MCP Gateway Service (Agricultural Tools)
+  - name: mcp-gateway
+    github:
+      repo: BishalJena/CropGPT
+      branch: main
+      deploy_on_push: true
+    
+    source_dir: /fs-gate
+    
+    build_command: npm install
+    
+    run_command: npm start
+    
+    http_port: 10000
+    
+    instance_count: 1
+    instance_size_slug: basic-xs  # $12/month
+    
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    
+    routes:
+      - path: /mcp
+    
+    envs:
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+      
+      - key: PORT
+        scope: RUN_TIME
+        value: "10000"
+      
+      - key: DATAGOVIN_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually in dashboard
+      
+      - key: EXA_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Value: Add manually in dashboard
+
+# Databases (Optional - creates managed databases)
+# Uncomment if you want DO to create databases for you
+#databases:
+#  - name: mongodb
+#    engine: MONGODB
+#    version: "6"
+#    production: true
+#    cluster_name: cropgpt-mongodb
+#  
+#  - name: redis
+#    engine: REDIS
+#    version: "7"
+#    production: true
+#    cluster_name: cropgpt-redis
+
+# Domains (Optional - add custom domains)
+#domains:
+#  - domain: cropgpt.com
+#    type: PRIMARY
+#  - domain: www.cropgpt.com
+#    type: ALIAS
+#  - domain: api.cropgpt.com
+#    type: ALIAS
+
+# Note: To deploy using this file:
+# 1. Commit this file to your repository
+# 2. Go to DigitalOcean App Platform
+# 3. Create App → Import from GitHub
+# 4. DigitalOcean will detect and use this .do/app.yaml file
+# 5. Review and add secret environment variables
+# 6. Deploy!
+#
+# Alternatively, use doctl CLI:
+# doctl apps create --spec .do/app.yaml
+#
+# For updates:
+# doctl apps update YOUR_APP_ID --spec .do/app.yaml

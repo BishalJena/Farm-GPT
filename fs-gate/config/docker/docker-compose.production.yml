@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Docker MCP Gateway - Production
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    container_name: agricultural-mcp-gateway-prod
+    ports:
+      - "80:8811"    # HTTP access for public
+      - "8811:8811"  # Direct MCP access
+    environment:
+      - DOCKER_MCP_METRICS_INTERVAL=60
+      - NODE_ENV=production
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./agricultural-ai-catalog.yaml:/catalogs/agricultural-ai.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.docker:/root/.docker:ro
+    command: 
+      - --catalog=/catalogs/agricultural-ai.yaml
+      - --servers=agricultural-ai-unified
+      - --transport=sse
+      - --port=8811
+      - --verbose
+    restart: always
+    depends_on:
+      - agricultural-ai-server
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Agricultural AI Server - Production
+  agricultural-ai-server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: agricultural-ai-mcp-server-prod
+    ports:
+      - "10000:10000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=10000
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy for better routing
+  nginx:
+    image: nginx:alpine
+    container_name: agricultural-mcp-nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - mcp-gateway
+      - agricultural-ai-server
+    restart: always
+    networks:
+      - mcp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for caching (optional but good for production)
+  redis:
+    image: redis:alpine
+    container_name: agricultural-mcp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: always
+    networks:
+      - mcp-network
+    command: redis-server --appendonly yes
+
+networks:
+  mcp-network:
+    driver: bridge
+    name: agricultural-mcp-network-prod
+
+volumes:
+  redis-data:
+    name: agricultural-mcp-redis-data
