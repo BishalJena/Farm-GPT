@@ -10,7 +10,7 @@ export const translations = {
     email: "Email",
     password: "Password",
     createAccount: "Create Account",
-    
+
     // Chat Interface
     logout: "Logout",
     welcomeTitle: "Welcome to Farmer Chatbot",
@@ -27,7 +27,7 @@ export const translations = {
     accountDetails: "Account Details",
     privacySecurity: "Privacy & Security",
     selectLanguage: "Select Language",
-    
+
     // Schemes Page
     schemesTitle: "Government Schemes",
     backToChat: "Back to Chat",
@@ -52,7 +52,19 @@ export const translations = {
     benefit: "Benefit",
     amountReceived: "Amount Received",
     dismiss: "Dismiss",
-    
+
+    // Account Page
+    accountTitle: "Account Details",
+    personalInfo: "Personal Information",
+    phoneNumber: "Phone Number",
+    changePassword: "Change Password",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmPassword: "Confirm Password",
+    updatePassword: "Update Password",
+    passwordsDoNotMatch: "Passwords do not match",
+    passwordUpdated: "Password updated successfully",
+
     // Marketplace Page
     marketplaceTitle: "Marketplace",
     listSurplus: "List Surplus",
@@ -70,7 +82,7 @@ export const translations = {
     markAsSold: "Mark as Sold",
     deleteListing: "Delete",
     confirmDelete: "Are you sure you want to delete this listing?",
-    
+
     // Crops
     wheat: "Wheat",
     rice: "Rice",
@@ -79,10 +91,10 @@ export const translations = {
     maize: "Maize",
     potato: "Potato",
     onion: "Onion",
-    
+
     // States
     stateAndhraPradesh: "Andhra Pradesh",
-    stateArunachalPradesh: "Arunachal Pradesh", 
+    stateArunachalPradesh: "Arunachal Pradesh",
     stateAssam: "Assam",
     stateBihar: "Bihar",
     stateChhattisgarh: "Chhattisgarh",
@@ -109,7 +121,7 @@ export const translations = {
     stateUttarPradesh: "Uttar Pradesh",
     stateUttarakhand: "Uttarakhand",
     stateWestBengal: "West Bengal",
-    
+
     // Union Territories
     utAndamanNicobar: "Andaman & Nicobar Islands",
     utChandigarh: "Chandigarh",
@@ -119,7 +131,7 @@ export const translations = {
     utLadakh: "Ladakh",
     utLakshadweep: "Lakshadweep",
     utPuducherry: "Puducherry",
-    
+
     // Districts - Haryana
     districtAmbala: "Ambala",
     districtBhiwani: "Bhiwani",
@@ -143,7 +155,7 @@ export const translations = {
     districtSirsa: "Sirsa",
     districtSonipat: "Sonipat",
     districtYamunanagar: "Yamunanagar",
-    
+
     // Scheme translations
     eligibility: "Eligibility",
     applyNow: "Apply Now",
@@ -152,14 +164,139 @@ export const translations = {
     applicationId: "Application ID",
     applicationUnderReview: "Application",
     isUnderReview: "is under review. You will be notified once processed.",
-    
-    // PM-KISAN Scheme
+
+    // Government Schemes
     scheme_pm_kisan_name: "PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)",
     scheme_pm_kisan_description: "Direct income support scheme for small and marginal farmers",
     scheme_pm_kisan_benefit: "₹6,000 per year in 3 equal installments of ₹2,000 each",
     scheme_pm_kisan_eligibility_0: "All landholding farmers (small and marginal)",
     scheme_pm_kisan_eligibility_1: "Land records should be in farmer's name",
     scheme_pm_kisan_eligibility_2: "Applicable across all states and UTs",
+
+    scheme_pmfby_name: "PMFBY (Pradhan Mantri Fasal Bima Yojana)",
+    scheme_pmfby_description: "Crop insurance scheme providing financial support to farmers",
+    scheme_pmfby_benefit: "Insurance coverage for crop loss due to natural calamities",
+
+    scheme_soil_health_name: "Soil Health Card Scheme",
+    scheme_soil_health_description: "Provides soil health cards to farmers for better crop planning",
+    scheme_soil_health_benefit: "Free soil testing and nutrient management advice",
+
+    scheme_pm_kusum_name: "PM-KUSUM (Pradhan Mantri Kisan Urja Suraksha evam Utthaan Mahabhiyan)",
+    scheme_pm_kusum_description: "Solar power scheme for farmers",
+    scheme_pm_kusum_benefit: "Subsidized solar pumps and grid-connected solar power plants",
+
+    scheme_kisan_credit_name: "Kisan Credit Card (KCC)",
+    scheme_kisan_credit_description: "Credit facility for farmers to meet agricultural expenses",
+    scheme_kisan_credit_benefit: "Easy access to credit at subsidized interest rates",
+
+    scheme_organic_farming_name: "Paramparagat Krishi Vikas Yojana (PKVY)",
+    scheme_organic_farming_description: "Promotes organic farming practices",
+    scheme_organic_farming_benefit: "₹50,000 per hectare for organic farming adoption",
+
+    // Specific scheme ID translations (matching backend IDs)
+    scheme_pm_kisan_name: "PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)",
+    scheme_pm_kisan_description: "Direct income support scheme for small and marginal farmers",
+    scheme_pm_kisan_benefit: "₹6,000 per year in 3 equal installments of ₹2,000 each",
+
+    scheme_pmfby_name: "PMFBY (Pradhan Mantri Fasal Bima Yojana)",
+    scheme_pmfby_description: "Crop insurance scheme providing financial support to farmers",
+    scheme_pmfby_benefit: "Insurance coverage for crop loss due to natural calamities",
+
+    scheme_soil_health_card_name: "Soil Health Card Scheme",
+    scheme_soil_health_card_description: "Provides soil health cards to farmers for better crop planning",
+    scheme_soil_health_card_benefit: "Free soil testing and nutrient management advice",
+
+    scheme_kisan_credit_card_name: "Kisan Credit Card (KCC)",
+    scheme_kisan_credit_card_description: "Credit facility for farmers to meet agricultural expenses",
+    scheme_kisan_credit_card_benefit: "Easy access to credit at subsidized interest rates",
+
+    scheme_pm_kusum_name: "PM-KUSUM (Pradhan Mantri Kisan Urja Suraksha evam Utthaan Mahabhiyan)",
+    scheme_pm_kusum_description: "Solar power scheme for farmers",
+    scheme_pm_kusum_benefit: "Subsidized solar pumps and grid-connected solar power plants",
+
+    // Districts - Punjab
+    districtAmritsar: "Amritsar",
+    districtBarnala: "Barnala",
+    districtBathinda: "Bathinda",
+    districtFaridkot: "Faridkot",
+    districtFatehgarhSahib: "Fatehgarh Sahib",
+    districtFazilka: "Fazilka",
+    districtFerozepur: "Ferozepur",
+    districtGurdaspur: "Gurdaspur",
+    districtHoshiarpur: "Hoshiarpur",
+    districtJalandhar: "Jalandhar",
+    districtKapurthala: "Kapurthala",
+    districtLudhiana: "Ludhiana",
+    districtMansa: "Mansa",
+    districtMoga: "Moga",
+    districtMohali: "Mohali",
+    districtMuktsar: "Muktsar",
+    districtPathankot: "Pathankot",
+    districtPatiala: "Patiala",
+    districtRupnagar: "Rupnagar",
+    districtSangrur: "Sangrur",
+    districtShaheedBhagatSinghNagar: "Shaheed Bhagat Singh Nagar",
+    districtTarnTaran: "Tarn Taran",
+
+    // Districts - Maharashtra (Major ones)
+    districtMumbai: "Mumbai",
+    districtPune: "Pune",
+    districtNagpur: "Nagpur",
+    districtNashik: "Nashik",
+    districtAurangabad: "Aurangabad",
+    districtSolapur: "Solapur",
+    districtKolhapur: "Kolhapur",
+    districtSangli: "Sangli",
+    districtSatara: "Satara",
+    districtAhmednagar: "Ahmednagar",
+
+    // Districts - Uttar Pradesh (Major ones)
+    districtLucknow: "Lucknow",
+    districtKanpur: "Kanpur",
+    districtAgra: "Agra",
+    districtVaranasi: "Varanasi",
+    districtAllahabad: "Allahabad",
+    districtMeerut: "Meerut",
+    districtGhaziabad: "Ghaziabad",
+    districtNoida: "Noida",
+    districtMathura: "Mathura",
+    districtFirozabad: "Firozabad",
+
+    // Districts - Tamil Nadu (Major ones)
+    districtChennai: "Chennai",
+    districtCoimbatore: "Coimbatore",
+    districtMadurai: "Madurai",
+    districtSalem: "Salem",
+    districtTiruchirappalli: "Tiruchirappalli",
+    districtTirunelveli: "Tirunelveli",
+    districtVellore: "Vellore",
+    districtErode: "Erode",
+    districtThanjavur: "Thanjavur",
+    districtKanyakumari: "Kanyakumari",
+
+    // Districts - Karnataka (Major ones)
+    districtBengaluru: "Bengaluru",
+    districtMysuru: "Mysuru",
+    districtHubli: "Hubli",
+    districtMangaluru: "Mangaluru",
+    districtBelagavi: "Belagavi",
+    districtKalaburagi: "Kalaburagi",
+    districtDavanagere: "Davanagere",
+    districtBellary: "Bellary",
+    districtShimoga: "Shimoga",
+    districtTumkur: "Tumkur",
+
+    // Districts - West Bengal (Major ones)
+    districtKolkata: "Kolkata",
+    districtHowrah: "Howrah",
+    districtDarjeeling: "Darjeeling",
+    districtAsansol: "Asansol",
+    districtSiliguri: "Siliguri",
+    districtDurgapur: "Durgapur",
+    districtBardhaman: "Bardhaman",
+    districtMalda: "Malda",
+    districtKrishnanagar: "Krishnanagar",
+    districtRaiganj: "Raiganj",
   },
   hi: {
     appTitle: "किसान चैटबॉट",
@@ -169,7 +306,7 @@ export const translations = {
     email: "ईमेल",
     password: "पासवर्ड",
     createAccount: "खाता बनाएं",
-    
+
     logout: "लॉग आउट",
     welcomeTitle: "किसान चैटबॉट में आपका स्वागत है",
     welcomeSubtitle: "आपका AI-संचालित कृषि सहायक। मुझसे फसल की कीमतों, खेती के तरीकों या किसी भी कृषि प्रश्न के बारे में पूछें!",
@@ -185,7 +322,7 @@ export const translations = {
     accountDetails: "खाता विवरण",
     privacySecurity: "गोपनीयता और सुरक्षा",
     selectLanguage: "भाषा चुनें",
-    
+
     // Schemes Page
     schemesTitle: "सरकारी योजनाएं",
     backToChat: "चैट पर वापस जाएं",
@@ -210,7 +347,19 @@ export const translations = {
     benefit: "लाभ",
     amountReceived: "प्राप्त राशि",
     dismiss: "खारिज करें",
-    
+
+    // Account Page
+    accountTitle: "खाता विवरण",
+    personalInfo: "व्यक्तिगत जानकारी",
+    phoneNumber: "फोन नंबर",
+    changePassword: "पासवर्ड बदलें",
+    currentPassword: "वर्तमान पासवर्ड",
+    newPassword: "नया पासवर्ड",
+    confirmPassword: "पासवर्ड की पुष्टि करें",
+    updatePassword: "पासवर्ड अपडेट करें",
+    passwordsDoNotMatch: "पासवर्ड मेल नहीं खाते",
+    passwordUpdated: "पासवर्ड सफलतापूर्वक अपडेट किया गया",
+
     // Marketplace Page
     marketplaceTitle: "बाज़ार",
     listSurplus: "अतिरिक्त सूची",
@@ -228,7 +377,7 @@ export const translations = {
     markAsSold: "बेचा गया के रूप में चिह्नित करें",
     deleteListing: "हटाएं",
     confirmDelete: "क्या आप वाकई इस सूची को हटाना चाहते हैं?",
-    
+
     // Crops
     wheat: "गेहूं",
     rice: "चावल",
@@ -237,12 +386,12 @@ export const translations = {
     maize: "मक्का",
     potato: "आलू",
     onion: "प्याज",
-    
+
     // States
     stateAndhraPradesh: "आंध्र प्रदेश",
     stateArunachalPradesh: "अरुणाचल प्रदेश",
     stateAssam: "असम",
-    stateBihar: "बिहार", 
+    stateBihar: "बिहार",
     stateChhattisgarh: "छत्तीसगढ़",
     stateGoa: "गोवा",
     stateGujarat: "गुजरात",
@@ -267,7 +416,7 @@ export const translations = {
     stateUttarPradesh: "उत्तर प्रदेश",
     stateUttarakhand: "उत्तराखंड",
     stateWestBengal: "पश्चिम बंगाल",
-    
+
     // Union Territories
     utAndamanNicobar: "अंडमान और निकोबार द्वीप समूह",
     utChandigarh: "चंडीगढ़",
@@ -277,7 +426,7 @@ export const translations = {
     utLadakh: "लद्दाख",
     utLakshadweep: "लक्षद्वीप",
     utPuducherry: "पुडुचेरी",
-    
+
     // Districts - Haryana
     districtAmbala: "अंबाला",
     districtBhiwani: "भिवानी",
@@ -301,7 +450,7 @@ export const translations = {
     districtSirsa: "सिरसा",
     districtSonipat: "सोनीपत",
     districtYamunanagar: "यमुनानगर",
-    
+
     // Scheme translations
     eligibility: "पात्रता",
     applyNow: "अभी आवेदन करें",
@@ -310,15 +459,140 @@ export const translations = {
     applicationId: "आवेदन आईडी",
     applicationUnderReview: "आवेदन",
     isUnderReview: "समीक्षाधीन है। प्रक्रिया पूर्ण होने पर आपको सूचित किया जाएगा।",
-    
-    // PM-KISAN Scheme
+
+    // Government Schemes
     scheme_pm_kisan_name: "पीएम-किसान (प्रधानमंत्री किसान सम्मान निधि)",
     scheme_pm_kisan_description: "छोटे और सीमांत किसानों के लिए प्रत्यक्ष आय सहायता योजना",
     scheme_pm_kisan_benefit: "₹6,000 प्रति वर्ष 3 समान किस्तों में ₹2,000 प्रत्येक",
     scheme_pm_kisan_eligibility_0: "सभी भूमिधारक किसान (छोटे और सीमांत)",
     scheme_pm_kisan_eligibility_1: "भूमि रिकॉर्ड किसान के नाम पर होना चाहिए",
     scheme_pm_kisan_eligibility_2: "सभी राज्यों और केंद्र शासित प्रदेशों में लागू",
-    
+
+    scheme_pmfby_name: "पीएमएफबीवाई (प्रधानमंत्री फसल बीमा योजना)",
+    scheme_pmfby_description: "किसानों को वित्तीय सहायता प्रदान करने वाली फसल बीमा योजना",
+    scheme_pmfby_benefit: "प्राकृतिक आपदाओं के कारण फसल हानि के लिए बीमा कवरेज",
+
+    scheme_soil_health_name: "मृदा स्वास्थ्य कार्ड योजना",
+    scheme_soil_health_description: "बेहतर फसल योजना के लिए किसानों को मृदा स्वास्थ्य कार्ड प्रदान करती है",
+    scheme_soil_health_benefit: "मुफ्त मिट्टी परीक्षण और पोषक तत्व प्रबंधन सलाह",
+
+    scheme_pm_kusum_name: "पीएम-कुसुम (प्रधानमंत्री किसान ऊर्जा सुरक्षा एवं उत्थान महाभियान)",
+    scheme_pm_kusum_description: "किसानों के लिए सौर ऊर्जा योजना",
+    scheme_pm_kusum_benefit: "सब्सिडी युक्त सोलर पंप और ग्रिड कनेक्टेड सोलर पावर प्लांट",
+
+    scheme_kisan_credit_name: "किसान क्रेडिट कार्ड (केसीसी)",
+    scheme_kisan_credit_description: "कृषि खर्चों को पूरा करने के लिए किसानों के लिए ऋण सुविधा",
+    scheme_kisan_credit_benefit: "सब्सिडी युक्त ब्याज दरों पर ऋण की आसान पहुंच",
+
+    scheme_organic_farming_name: "परंपरागत कृषि विकास योजना (पीकेवीवाई)",
+    scheme_organic_farming_description: "जैविक खेती प्रथाओं को बढ़ावा देती है",
+    scheme_organic_farming_benefit: "जैविक खेती अपनाने के लिए ₹50,000 प्रति हेक्टेयर",
+
+    // Specific scheme ID translations (matching backend IDs)
+    scheme_pm_kisan_name: "पीएम-किसान (प्रधानमंत्री किसान सम्मान निधि)",
+    scheme_pm_kisan_description: "छोटे और सीमांत किसानों के लिए प्रत्यक्ष आय सहायता योजना",
+    scheme_pm_kisan_benefit: "₹6,000 प्रति वर्ष 3 समान किस्तों में ₹2,000 प्रत्येक",
+
+    scheme_pmfby_name: "पीएमएफबीवाई (प्रधानमंत्री फसल बीमा योजना)",
+    scheme_pmfby_description: "किसानों को वित्तीय सहायता प्रदान करने वाली फसल बीमा योजना",
+    scheme_pmfby_benefit: "प्राकृतिक आपदाओं के कारण फसल हानि के लिए बीमा कवरेज",
+
+    scheme_soil_health_card_name: "मृदा स्वास्थ्य कार्ड योजना",
+    scheme_soil_health_card_description: "बेहतर फसल योजना के लिए किसानों को मृदा स्वास्थ्य कार्ड प्रदान करती है",
+    scheme_soil_health_card_benefit: "मुफ्त मिट्टी परीक्षण और पोषक तत्व प्रबंधन सलाह",
+
+    scheme_kisan_credit_card_name: "किसान क्रेडिट कार्ड (केसीसी)",
+    scheme_kisan_credit_card_description: "कृषि खर्चों को पूरा करने के लिए किसानों के लिए ऋण सुविधा",
+    scheme_kisan_credit_card_benefit: "सब्सिडी युक्त ब्याज दरों पर ऋण की आसान पहुंच",
+
+    scheme_pm_kusum_name: "पीएम-कुसुम (प्रधानमंत्री किसान ऊर्जा सुरक्षा एवं उत्थान महाभियान)",
+    scheme_pm_kusum_description: "किसानों के लिए सौर ऊर्जा योजना",
+    scheme_pm_kusum_benefit: "सब्सिडी युक्त सोलर पंप और ग्रिड कनेक्टेड सोलर पावर प्लांट",
+
+    // Districts - Punjab
+    districtAmritsar: "अमृतसर",
+    districtBarnala: "बरनाला",
+    districtBathinda: "बठिंडा",
+    districtFaridkot: "फरीदकोट",
+    districtFatehgarhSahib: "फतेहगढ़ साहिब",
+    districtFazilka: "फाजिल्का",
+    districtFerozepur: "फिरोजपुर",
+    districtGurdaspur: "गुरदासपुर",
+    districtHoshiarpur: "होशियारपुर",
+    districtJalandhar: "जालंधर",
+    districtKapurthala: "कपूरथला",
+    districtLudhiana: "लुधियाना",
+    districtMansa: "मानसा",
+    districtMoga: "मोगा",
+    districtMohali: "मोहाली",
+    districtMuktsar: "मुक्तसर",
+    districtPathankot: "पठानकोट",
+    districtPatiala: "पटियाला",
+    districtRupnagar: "रूपनगर",
+    districtSangrur: "संगरूर",
+    districtShaheedBhagatSinghNagar: "शहीद भगत सिंह नगर",
+    districtTarnTaran: "तरन तारन",
+
+    // Districts - Maharashtra (Major ones)
+    districtMumbai: "मुंबई",
+    districtPune: "पुणे",
+    districtNagpur: "नागपुर",
+    districtNashik: "नाशिक",
+    districtAurangabad: "औरंगाबाद",
+    districtSolapur: "सोलापुर",
+    districtKolhapur: "कोल्हापुर",
+    districtSangli: "सांगली",
+    districtSatara: "सतारा",
+    districtAhmednagar: "अहमदनगर",
+
+    // Districts - Uttar Pradesh (Major ones)
+    districtLucknow: "लखनऊ",
+    districtKanpur: "कानपुर",
+    districtAgra: "आगरा",
+    districtVaranasi: "वाराणसी",
+    districtAllahabad: "इलाहाबाद",
+    districtMeerut: "मेरठ",
+    districtGhaziabad: "गाजियाबाद",
+    districtNoida: "नोएडा",
+    districtMathura: "मथुरा",
+    districtFirozabad: "फिरोजाबाद",
+
+    // Districts - Tamil Nadu (Major ones)
+    districtChennai: "चेन्नई",
+    districtCoimbatore: "कोयंबटूर",
+    districtMadurai: "मदुरै",
+    districtSalem: "सेलम",
+    districtTiruchirappalli: "तिरुचिरापल्ली",
+    districtTirunelveli: "तिरुनेलवेली",
+    districtVellore: "वेल्लोर",
+    districtErode: "इरोड",
+    districtThanjavur: "तंजावुर",
+    districtKanyakumari: "कन्याकुमारी",
+
+    // Districts - Karnataka (Major ones)
+    districtBengaluru: "बेंगलुरु",
+    districtMysuru: "मैसूरु",
+    districtHubli: "हुबली",
+    districtMangaluru: "मंगलुरु",
+    districtBelagavi: "बेलगावी",
+    districtKalaburagi: "कलबुर्गी",
+    districtDavanagere: "दावणगेरे",
+    districtBellary: "बेल्लारी",
+    districtShimoga: "शिमोगा",
+    districtTumkur: "तुमकुर",
+
+    // Districts - West Bengal (Major ones)
+    districtKolkata: "कोलकाता",
+    districtHowrah: "हावड़ा",
+    districtDarjeeling: "दार्जिलिंग",
+    districtAsansol: "आसनसोल",
+    districtSiliguri: "सिलीगुड़ी",
+    districtDurgapur: "दुर्गापुर",
+    districtBardhaman: "बर्धमान",
+    districtMalda: "मालदा",
+    districtKrishnanagar: "कृष्णनगर",
+    districtRaiganj: "रायगंज",
+
     conversations: "बातचीत",
     accountDetails: "खाता विवरण",
     privacySecurity: "गोपनीयता और सुरक्षा",
@@ -332,7 +606,7 @@ export const translations = {
     email: "மின்னஞ்சல்",
     password: "கடவுச்சொல்",
     createAccount: "கணக்கை உருவாக்கவும்",
-    
+
     logout: "வெளியேறு",
     welcomeTitle: "விவசாயி சேட்பாட்டிற்கு வரவேற்கிறோம்",
     welcomeSubtitle: "உங்கள் AI-இயக்கப்படும் விவசாய உதவியாளர். பயிர் விலைகள், விவசாய நடைமுறைகள் அல்லது எந்த விவசாய கேள்விகளையும் என்னிடம் கேளுங்கள்!",
@@ -348,6 +622,29 @@ export const translations = {
     accountDetails: "கணக்கு விவரங்கள்",
     privacySecurity: "தனியுரிமை மற்றும் பாதுகாப்பு",
     selectLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
+
+    // Schemes Page
+    schemesTitle: "அரசு திட்டங்கள்",
+    backToChat: "அரட்டைக்கு திரும்பு",
+    tellUsAboutFarm: "உங்கள் பண்ணையைப் பற்றி சொல்லுங்கள்",
+    state: "மாநிலம்",
+    selectState: "மாநிலத்தைத் தேர்ந்தெடுக்கவும்",
+    district: "மாவட்டம்",
+    selectDistrict: "மாவட்டத்தைத் தேர்ந்தெடுக்கவும்",
+    landSize: "நில அளவு (ஏக்கர்)",
+    primaryCrops: "முதன்மை பயிர்கள்",
+    findMySchemes: "எனது திட்டங்களைக் கண்டறியவும்",
+
+    // Key districts - Tamil Nadu
+    districtChennai: "சென்னை",
+    districtCoimbatore: "கோயம்புத்தூர்",
+    districtMadurai: "மதுரை",
+    districtSalem: "சேலம்",
+    districtTiruchirappalli: "திருச்சிராப்பள்ளி",
+
+    // Key schemes
+    scheme_pm_kisan_name: "பிஎம்-கிசான் (பிரதான மந்திரி கிசான் சம்மான் நிதி)",
+    scheme_pmfby_name: "பிஎம்எஃப்பிவை (பிரதான மந்திரி ஃபசல் பீமா யோஜனா)",
   },
   te: {
     appTitle: "రైతు చాట్‌బాట్",
@@ -357,7 +654,7 @@ export const translations = {
     email: "ఇమెయిల్",
     password: "పాస్వర్డ్",
     createAccount: "ఖాతా సృష్టించండి",
-    
+
     logout: "లాగ్అవుట్",
     welcomeTitle: "రైతు చాట్‌బాట్‌కు స్వాగతం",
     welcomeSubtitle: "మీ AI-శక్తితో పనిచేసే వ్యవసాయ సహాయకుడు. పంట ధరలు, వ్యవసాయ పద్ధతులు లేదా ఏదైనా వ్యవసాయ ప్రశ్నల గురించి నన్ను అడగండి!",
@@ -373,6 +670,22 @@ export const translations = {
     accountDetails: "ఖాతా వివరాలు",
     privacySecurity: "గోప్యత మరియు భద్రత",
     selectLanguage: "భాషను ఎంచుకోండి",
+
+    // Schemes Page
+    schemesTitle: "ప్రభుత్వ పథకాలు",
+    backToChat: "చాట్‌కు తిరిగి వెళ్లండి",
+    tellUsAboutFarm: "మీ వ్యవసాయం గురించి చెప్పండి",
+    state: "రాష్ట్రం",
+    selectState: "రాష్ట్రాన్ని ఎంచుకోండి",
+    district: "జిల్లా",
+    selectDistrict: "జిల్లాను ఎంచుకోండి",
+    landSize: "భూమి పరిమాణం (ఎకరాలు)",
+    primaryCrops: "ప్రధాన పంటలు",
+    findMySchemes: "నా పథకాలను కనుగొనండి",
+
+    // Key schemes
+    scheme_pm_kisan_name: "పిఎం-కిసాన్ (ప్రధాన మంత్రి కిసాన్ సమ్మాన్ నిధి)",
+    scheme_pmfby_name: "పిఎంఎఫ్‌బివై (ప్రధాన మంత్రి ఫసల్ బీమా యోజన)",
   },
   mr: {
     appTitle: "शेतकरी चॅटबॉट",
@@ -382,7 +695,7 @@ export const translations = {
     email: "ईमेल",
     password: "पासवर्ड",
     createAccount: "खाते तयार करा",
-    
+
     logout: "लॉगआउट",
     welcomeTitle: "शेतकरी चॅटबॉटमध्ये आपले स्वागत आहे",
     welcomeSubtitle: "तुमचा AI-चालित कृषी सहाय्यक. मला पीक किंमती, शेती पद्धती किंवा कोणत्याही कृषी प्रश्नांबद्दल विचारा!",
@@ -407,7 +720,7 @@ export const translations = {
     email: "ইমেইল",
     password: "পাসওয়ার্ড",
     createAccount: "অ্যাকাউন্ট তৈরি করুন",
-    
+
     logout: "লগআউট",
     welcomeTitle: "কৃষক চ্যাটবটে স্বাগতম",
     welcomeSubtitle: "আপনার AI-চালিত কৃষি সহায়ক। আমাকে ফসলের দাম, চাষের পদ্ধতি বা কৃষি সম্পর্কিত যেকোনো প্রশ্ন জিজ্ঞাসা করুন!",
@@ -432,7 +745,7 @@ export const translations = {
     email: "ઇમેઇલ",
     password: "પાસવર્ડ",
     createAccount: "ખાતું બનાવો",
-    
+
     logout: "લોગઆઉટ",
     welcomeTitle: "ખેડૂત ચેટબોટમાં આપનું સ્વાગત છે",
     welcomeSubtitle: "તમારો AI-સંચાલિત કૃષિ સહાયક। મને પાકના ભાવ, ખેતીની પદ્ધતિઓ અથવા કોઈપણ કૃષિ પ્રશ્નો પૂછો!",
@@ -457,7 +770,7 @@ export const translations = {
     email: "ಇಮೇಲ್",
     password: "ಪಾಸ್‌ವರ್ಡ್",
     createAccount: "ಖಾತೆ ರಚಿಸಿ",
-    
+
     logout: "ಲಾಗ್‌ಔಟ್",
     welcomeTitle: "ರೈತ ಚಾಟ್‌ಬಾಟ್‌ಗೆ ಸ್ವಾಗತ",
     welcomeSubtitle: "ನಿಮ್ಮ AI-ಚಾಲಿತ ಕೃಷಿ ಸಹಾಯಕ। ಬೆಳೆ ಬೆಲೆಗಳು, ಕೃಷಿ ಪದ್ಧತಿಗಳು ಅಥವಾ ಯಾವುದೇ ಕೃಷಿ ಪ್ರಶ್ನೆಗಳ ಬಗ್ಗೆ ನನ್ನನ್ನು ಕೇಳಿ!",
@@ -482,7 +795,7 @@ export const translations = {
     email: "ഇമെയിൽ",
     password: "പാസ്‌വേഡ്",
     createAccount: "അക്കൗണ്ട് സൃഷ്ടിക്കുക",
-    
+
     logout: "ലോഗൗട്ട്",
     welcomeTitle: "കർഷക ചാറ്റ്ബോട്ടിലേക്ക് സ്വാഗതം",
     welcomeSubtitle: "നിങ്ങളുടെ AI-പവർഡ് കാർഷിക സഹായി। വിള വില, കൃഷി രീതികൾ അല്ലെങ്കിൽ ഏതെങ്കിലും കാർഷിക ചോദ്യങ്ങൾ എന്നോട് ചോദിക്കുക!",
@@ -507,7 +820,7 @@ export const translations = {
     email: "ਈਮੇਲ",
     password: "ਪਾਸਵਰਡ",
     createAccount: "ਖਾਤਾ ਬਣਾਓ",
-    
+
     logout: "ਲਾਗਆਉਟ",
     welcomeTitle: "ਕਿਸਾਨ ਚੈਟਬੋਟ ਵਿੱਚ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ",
     welcomeSubtitle: "ਤੁਹਾਡਾ AI-ਸੰਚਾਲਿਤ ਖੇਤੀਬਾੜੀ ਸਹਾਇਕ। ਮੈਨੂੰ ਫਸਲਾਂ ਦੀਆਂ ਕੀਮਤਾਂ, ਖੇਤੀ ਦੇ ਤਰੀਕਿਆਂ ਜਾਂ ਕਿਸੇ ਵੀ ਖੇਤੀਬਾੜੀ ਸਵਾਲਾਂ ਬਾਰੇ ਪੁੱਛੋ!",
@@ -523,6 +836,29 @@ export const translations = {
     accountDetails: "ਖਾਤਾ ਵੇਰਵੇ",
     privacySecurity: "ਗੋਪਨੀਯਤਾ ਅਤੇ ਸੁਰੱਖਿਆ",
     selectLanguage: "ਭਾਸ਼ਾ ਚੁਣੋ",
+
+    // Schemes Page
+    schemesTitle: "ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ",
+    backToChat: "ਚੈਟ ਵਿੱਚ ਵਾਪਸ ਜਾਓ",
+    tellUsAboutFarm: "ਆਪਣੇ ਖੇਤ ਬਾਰੇ ਦੱਸੋ",
+    state: "ਰਾਜ",
+    selectState: "ਰਾਜ ਚੁਣੋ",
+    district: "ਜ਼ਿਲ੍ਹਾ",
+    selectDistrict: "ਜ਼ਿਲ੍ਹਾ ਚੁਣੋ",
+    landSize: "ਜ਼ਮੀਨ ਦਾ ਆਕਾਰ (ਏਕੜ)",
+    primaryCrops: "ਮੁੱਖ ਫਸਲਾਂ",
+    findMySchemes: "ਮੇਰੀਆਂ ਯੋਜਨਾਵਾਂ ਲੱਭੋ",
+
+    // Punjab districts
+    districtAmritsar: "ਅੰਮ੍ਰਿਤਸਰ",
+    districtLudhiana: "ਲੁਧਿਆਣਾ",
+    districtJalandhar: "ਜਲੰਧਰ",
+    districtPatiala: "ਪਟਿਆਲਾ",
+    districtBathinda: "ਬਠਿੰਡਾ",
+
+    // Key schemes
+    scheme_pm_kisan_name: "ਪੀਐਮ-ਕਿਸਾਨ (ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਕਿਸਾਨ ਸਮਾਨ ਨਿਧੀ)",
+    scheme_pmfby_name: "ਪੀਐਮਐਫਬੀਵਾਈ (ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਫਸਲ ਬੀਮਾ ਯੋਜਨਾ)",
   }
 };
 

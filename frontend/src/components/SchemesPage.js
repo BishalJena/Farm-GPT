@@ -15,8 +15,17 @@ function SchemesPage({ user, onLogout }) {
     return null;
   }
   
-  const [currentLanguage, setCurrentLanguage] = useState('en');
+  // Get language from localStorage (same as ChatInterface)
+  const [currentLanguage, setCurrentLanguage] = useState(() => {
+    return localStorage.getItem('uiLanguage') || 'en';
+  });
   const t = useTranslation(currentLanguage) || {};
+  
+  // Listen for language changes
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('uiLanguage') || 'en';
+    setCurrentLanguage(savedLanguage);
+  }, []);
   const [farmerDetails, setFarmerDetails] = useState({
     state: '',
     district: '',

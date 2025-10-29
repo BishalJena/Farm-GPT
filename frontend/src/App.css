@@ -4734,29 +4734,7 @@ ror Message Styling */
 }
 
 /* Recording Indicator */
-.recording-indicator {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.recording-dot {
-  width: 12px;
-  height: 12px;
-  background: #dc2626;
-  border-radius: 50%;
-  animation: pulse 1.5s infinite;
-}
+/* Duplicate recording-indicator styles removed - using the top-right positioned version above */
 
 /* Voice Response Controls */
 .voice-response-controls {

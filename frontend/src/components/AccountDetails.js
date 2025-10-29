@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../translations';
 
 function AccountDetails({ user, onLogout }) {
   const navigate = useNavigate();
@@ -9,6 +10,18 @@ function AccountDetails({ user, onLogout }) {
     navigate('/auth');
     return null;
   }
+  
+  // Get language from localStorage (same as ChatInterface)
+  const [currentLanguage, setCurrentLanguage] = useState(() => {
+    return localStorage.getItem('uiLanguage') || 'en';
+  });
+  const t = useTranslation(currentLanguage) || {};
+  
+  // Listen for language changes
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('uiLanguage') || 'en';
+    setCurrentLanguage(savedLanguage);
+  }, []);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [showAadhaarSection, setShowAadhaarSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
