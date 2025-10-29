@@ -8,6 +8,12 @@ const API = `${BACKEND_URL}/api`;
 
 function ChatInterface({ user, onLogout }) {
   const navigate = useNavigate();
+  
+  // Safety check - redirect to auth if user is not available
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -932,17 +938,18 @@ function ChatInterface({ user, onLogout }) {
                 data-testid="profile-button"
               >
                 <div className="profile-avatar">
-                  {user.email[0].toUpperCase()}
+                  {user?.phone_number ? user.phone_number.slice(-2) : 'U'}
                 </div>
               </button>
               {profileMenuOpen && (
                 <div className="profile-dropdown">
                   <div className="profile-header">
                     <div className="profile-avatar-large">
-                      {user.email[0].toUpperCase()}
+                      {user?.phone_number ? user.phone_number.slice(-2) : 'U'}
                     </div>
                     <div className="profile-info">
-                      <div className="profile-email">{user.email}</div>
+                      <div className="profile-phone">{user?.phone_number}</div>
+                      {user?.name && <div className="profile-name">{user.name}</div>}
                     </div>
                   </div>
                   <div className="profile-menu-items">
@@ -1011,7 +1018,7 @@ function ChatInterface({ user, onLogout }) {
               <div key={message.id} className="message-wrapper">
                 <div className={`message ${message.role}`}>
                   <div className="message-avatar">
-                    {message.role === 'user' ? user.email[0].toUpperCase() : 'AI'}
+                    {message.role === 'user' ? (user?.phone_number ? user.phone_number.slice(-2) : 'U') : 'AI'}
                   </div>
                   <div className="message-content">
                     <div className="message-text">{message.content}</div>
@@ -1053,6 +1060,7 @@ function ChatInterface({ user, onLogout }) {
                               {tool === 'weather' && '🌤️ Weather'}
                               {tool === 'pest-identifier' && '🐛 Pest ID'}
                               {tool === 'mandi-price' && '💰 Mandi Price'}
+                              {tool === 'scheme-tool' && '🛡️ Crop Damage Assistance'}
                               {tool === 'cerebras-llama-3.1-8b' && '🧠 Cerebras Llama 3.1-8B'}
                             </span>
                           ))

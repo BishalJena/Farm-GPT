@@ -1642,24 +1642,53 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.back-button {
+/* Primary navigation back button - positioned in top-left corner */
+.back-button:not(.auth-container .back-button):not(.modal .back-button) {
+  position: fixed !important;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 0.875rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border-radius: 6px;
-  transition: all 0.2s;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: auto !important;
+  margin: 0 !important;
 }
 
-.back-button:hover {
+.back-button:not(.auth-container .back-button):not(.modal .back-button):hover {
   color: var(--text-primary);
-  background: var(--bg-tertiary);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile responsive styles for navigation back button */
+@media (max-width: 768px) {
+  .back-button:not(.auth-container .back-button):not(.modal .back-button) {
+    top: 0.75rem !important;
+    left: 0.75rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
+    gap: 0.375rem !important;
+    position: fixed !important;
+  }
+  
+  .back-button:not(.auth-container .back-button):not(.modal .back-button) svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .account-section {
@@ -3765,28 +3794,7 @@ hanced UX Elements */
   text-align: center;
 }
 
-.back-button {
-  position: absolute;
-  left: 2rem;
-  top: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.875rem;
-}
-
-.back-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--text-primary);
-  transform: translateX(-2px);
-}
+/* Duplicate back-button styles removed - using unified styles above */
 
 .page-header h1 {
   font-size: 2rem;
@@ -4336,10 +4344,7 @@ hanced UX Elements */
     padding: 1.5rem 1rem;
   }
 
-  .back-button {
-    position: static;
-    margin-bottom: 1rem;
-  }
+  /* Mobile back-button positioning maintained as fixed */
 
   .schemes-content,
   .marketplace-content {
@@ -4605,5 +4610,317 @@ ror Message Styling */
     break-inside: avoid;
     box-shadow: none;
     border: 1px solid #ccc;
+  }
+}
+/*
+ Phone Number Authentication Styles */
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e5e5e5;
+  margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+  color: #a0a0a0;
+  font-size: 0.9rem;
+}
+
+.phone-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 10px;
+  background: #2a2a2a;
+  transition: all 0.2s;
+}
+
+.phone-input-wrapper:focus-within {
+  border-color: #10a37f;
+  box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+  background: #333;
+}
+
+.country-code {
+  padding: 0.875rem 0.75rem;
+  color: #a0a0a0;
+  font-weight: 500;
+  border-right: 1px solid #3a3a3a;
+  background: #2a2a2a;
+  border-radius: 10px 0 0 10px;
+}
+
+.phone-input-wrapper input {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: none;
+  background: transparent;
+  color: #e5e5e5;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.phone-input-wrapper input::placeholder {
+  color: #6b7280;
+}
+
+.otp-input {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.otp-hint {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(16, 163, 127, 0.1);
+  border: 1px solid rgba(16, 163, 127, 0.3);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #10a37f;
+}
+
+/* OTP/Modal specific back button styles */
+.auth-container .back-button,
+.modal .back-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  color: #a0a0a0;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+  position: static;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.auth-container .back-button:hover,
+.modal .back-button:hover {
+  background: #2a2a2a;
+  color: #e5e5e5;
+  border-color: #3a3a3a;
+  transform: none;
+}
+
+.auth-container .back-button:disabled,
+.modal .back-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Profile Phone Display */
+.profile-phone {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.profile-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* Recording Indicator */
+.recording-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.recording-dot {
+  width: 12px;
+  height: 12px;
+  background: #dc2626;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+/* Voice Response Controls */
+.voice-response-controls {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.play-audio-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(16, 163, 127, 0.1);
+  border: 1px solid rgba(16, 163, 127, 0.3);
+  border-radius: 6px;
+  color: #10a37f;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.play-audio-button:hover {
+  background: rgba(16, 163, 127, 0.2);
+}
+
+.play-audio-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.audio-duration {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Audio Controls */
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.audio-control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.audio-control-button:hover {
+  background: rgba(220, 38, 38, 0.2);
+}
+
+/* Error and Connection Banners */
+.error-banner,
+.connection-banner {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+  max-width: 400px;
+}
+
+.connection-banner {
+  background: rgba(245, 158, 11, 0.9);
+}
+
+.error-content,
+.connection-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.125rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.error-dismiss:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Typing Status */
+.typing-status {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Mobile Responsive Updates for Phone Auth */
+@media (max-width: 768px) {
+  .auth-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .auth-header p {
+    font-size: 0.85rem;
+  }
+  
+  .otp-input {
+    font-size: 1.125rem;
+    letter-spacing: 0.25rem;
+  }
+  
+  .phone-input-wrapper {
+    flex-direction: column;
+  }
+  
+  .country-code {
+    border-right: none;
+    border-bottom: 1px solid #3a3a3a;
+    border-radius: 10px 10px 0 0;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .phone-input-wrapper input {
+    border-radius: 0 0 10px 10px;
+  }
+  
+  .recording-indicator {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .error-banner,
+  .connection-banner {
+    top: 0.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+    max-width: none;
   }
 }

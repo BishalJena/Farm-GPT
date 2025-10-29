@@ -5,9 +5,12 @@ import uuid
 
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    email: EmailStr
-    password_hash: str
+    phone_number: str  # Indian phone number format: +91XXXXXXXXXX
+    name: Optional[str] = None
+    location: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_login: Optional[datetime] = None
+    is_verified: bool = False
 
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

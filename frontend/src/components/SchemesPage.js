@@ -8,6 +8,13 @@ const API = `${BACKEND_URL}/api`;
 
 function SchemesPage({ user, onLogout }) {
   const navigate = useNavigate();
+  
+  // Safety check - redirect to auth if user is not available
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+  
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const t = useTranslation(currentLanguage) || {};
   const [farmerDetails, setFarmerDetails] = useState({

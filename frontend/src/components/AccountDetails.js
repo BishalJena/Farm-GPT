@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 
 function AccountDetails({ user, onLogout }) {
   const navigate = useNavigate();
+  
+  // Safety check - redirect to auth if user is not available
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [showAadhaarSection, setShowAadhaarSection] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -89,7 +95,7 @@ function AccountDetails({ user, onLogout }) {
           <div className="account-section">
             <div className="section-header">
               <div className="profile-avatar-xl">
-                {user.email[0].toUpperCase()}
+                {user?.phone_number ? user.phone_number.slice(-2) : 'U'}
               </div>
               <div>
                 <h2>Profile Information</h2>
@@ -98,12 +104,12 @@ function AccountDetails({ user, onLogout }) {
             </div>
             <div className="info-grid">
               <div className="info-item">
-                <label>Email Address</label>
-                <div className="info-value">{user.email}</div>
+                <label>Phone Number</label>
+                <div className="info-value">{user?.phone_number}</div>
               </div>
               <div className="info-item">
                 <label>User ID</label>
-                <div className="info-value">{user.user_id}</div>
+                <div className="info-value">{user?.user_id}</div>
               </div>
             </div>
           </div>

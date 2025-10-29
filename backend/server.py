@@ -60,7 +60,7 @@ JWT_EXPIRATION_HOURS = 24
 
 # API Keys
 CEREBRAS_API_KEY = os.environ.get('CEREBRAS_API_KEY')
-MCP_GATEWAY_URL = os.environ.get('MCP_GATEWAY_URL', 'http://165.232.190.215:8811')
+MCP_GATEWAY_URL = os.environ.get('MCP_GATEWAY_URL', 'http://localhost:10000')
 MCP_GATEWAY_TOKEN = os.environ.get('MCP_GATEWAY_TOKEN')  # Bearer token for MCP Gateway
 EXA_API_KEY = os.environ.get('EXA_API_KEY')
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
@@ -126,6 +126,92 @@ try:
 except Exception as e:
     logger.info(f"Redis not available, using in-memory cache only: {e}")
     redis_client = None
+
+# ==================== Phone Number & OTP Utilities ====================
+
+def normalize_phone_number(phone: str) -> str:
+    """Convert various phone formats to +91XXXXXXXXXX"""
+    # Remove all non-digit characters
+    digits = ''.join(filter(str.isdigit, phone))
+    
+    # Handle different formats
+    if len(digits) == 10:
+        return f"+91{digits}"
+    elif len(digits) == 11 and digits.startswith('0'):
+        return f"+91{digits[1:]}"
+    elif len(digits) == 12 and digits.startswith('91'):
+        return f"+{digits}"
+    elif len(digits) == 13 and digits.startswith('091'):
+        return f"+91{digits[3:]}"
+    else:
+        return phone  # Return as-is if format not recognized
+
+def validate_indian_phone(phone: str) -> bool:
+    """Validate Indian mobile number format"""
+    normalized = normalize_phone_number(phone)
+    # Check if it matches +91XXXXXXXXXX pattern and starts with valid mobile prefixes
+    if len(normalized) == 13 and normalized.startswith('+91'):
+        mobile_number = normalized[3:]
+        # Indian mobile numbers start with 6, 7, 8, or 9
+        return mobile_number[0] in ['6', '7', '8', '9'] and mobile_number.isdigit()
+    return False
+
+class OTPService:
+    """OTP generation and verification service"""
+    
+    def __init__(self):
+        self.otp_storage = {}  # In production, use Redis
+        self.attempt_storage = {}
+    
+    def generate_otp(self, phone_number: str) -> str:
+        """Generate OTP for phone number"""
+        # Hardcoded OTP for development
+        otp = "7521"
+        
+        # Store OTP with timestamp
+        self.otp_storage[phone_number] = {
+            "otp": otp,
+            "timestamp": datetime.now(timezone.utc),
+            "attempts": 0
+        }
+        
+        return otp
+    
+    def verify_otp(self, phone_number: str, otp: str) -> bool:
+        """Verify OTP with expiry and attempt limits"""
+        if phone_number not in self.otp_storage:
+            return False
+        
+        stored_data = self.otp_storage[phone_number]
+        
+        # Check expiry (5 minutes)
+        if datetime.now(timezone.utc) - stored_data["timestamp"] > timedelta(minutes=5):
+            del self.otp_storage[phone_number]
+            return False
+        
+        # Check attempt limit (3 attempts)
+        if stored_data["attempts"] >= 3:
+            del self.otp_storage[phone_number]
+            return False
+        
+        # Increment attempts
+        stored_data["attempts"] += 1
+        
+        # Verify OTP
+        if stored_data["otp"] == otp:
+            del self.otp_storage[phone_number]  # Clean up on success
+            return True
+        
+        return False
+    
+    async def send_otp_sms(self, phone_number: str, otp: str) -> bool:
+        """Mock SMS implementation for development"""
+        logger.info(f"📱 Mock SMS to {phone_number}: Your OTP is {otp}")
+        # In production, integrate with SMS service like Twilio, AWS SNS, etc.
+        return True
+
+# Initialize OTP service
+otp_service = OTPService()
 
 # ==================== Error Messages ====================
 
@@ -223,25 +309,24 @@ async def cache_conversation(conversation_id: str, user_id: str, messages: List[
 
 # ==================== Models ====================
 
-class User(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    email: EmailStr
-    password_hash: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class PhoneNumberRequest(BaseModel):
+    phone_number: str
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
+class OTPVerificationRequest(BaseModel):
+    phone_number: str
+    otp: str
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user_id: str
-    email: str
+    phone_number: str
+    is_new_user: bool = False
+
+class OTPResponse(BaseModel):
+    success: bool
+    message: str
+    expires_in: int = 300
 
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -330,9 +415,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     hashed_bytes = hashed_password.encode('utf-8')
     return bcrypt.checkpw(password_bytes, hashed_bytes)
 
-def create_access_token(user_id: str, email: str) -> str:
+def create_access_token(user_id: str, phone_number: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
-    to_encode = {"user_id": user_id, "email": email, "exp": expire}
+    to_encode = {"user_id": user_id, "phone_number": phone_number, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
@@ -341,79 +426,32 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         token = credentials.credentials
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id: str = payload.get("user_id")
-        email: str = payload.get("email")
-        if user_id is None or email is None:
+        phone_number: str = payload.get("phone_number")
+        if user_id is None or phone_number is None:
             raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return {"user_id": user_id, "email": email}
+        return {"user_id": user_id, "phone_number": phone_number}
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.JWTError:
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
 # ==================== MCP & Cerebras Services ====================
 
-class MCPGatewayClient:
-    def __init__(self, base_url: str, auth_token: Optional[str] = None):
-        self.base_url = base_url
-        self.rpc_endpoint = f"{base_url}/rpc"
-        self.tools_endpoint = f"{base_url}/tools"
-        self.auth_token = auth_token
+# Import the integrated agricultural tools
+from agricultural_tools import AgriculturalTools
+
+class IntegratedToolsClient:
+    """Wrapper to maintain compatibility with existing code while using integrated tools"""
+    def __init__(self):
+        self.tools = AgriculturalTools()
         
-    def _get_headers(self) -> Dict[str, str]:
-        """Get headers with authentication if available"""
-        headers = {"Content-Type": "application/json"}
-        if self.auth_token:
-            headers["Authorization"] = f"Bearer {self.auth_token}"
-        return headers
-        
-    async def _call_mcp_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Generic MCP tool caller using JSON-RPC protocol"""
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                # Use JSON-RPC 2.0 protocol for MCP Gateway
-                payload = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "tools/call",
-                    "params": {
-                        "name": tool_name,
-                        "arguments": arguments
-                    }
-                }
-                
-                headers = self._get_headers()
-                
-                # Use direct tool endpoint (this MCP Gateway uses HTTP REST API)
-                response = await client.post(
-                    f"{self.tools_endpoint}/{tool_name}",
-                    json=arguments,
-                    headers=headers
-                )
-                response.raise_for_status()
-                result = response.json()
-                
-                # Handle successful response
-                if result.get("success"):
-                    return result.get("data", result)
-                else:
-                    return {"error": result.get("error", "Unknown error")}
-                    
-        except Exception as e:
-            logger.error(f"Error calling MCP tool {tool_name}: {e}")
-            return {"error": str(e)}
-    
-    @lru_cache(maxsize=100)
-    def _cache_key(self, state: str, commodity: str, district: str = "") -> str:
-        """Generate cache key for crop price requests"""
-        return f"crop_price_{state}_{commodity}_{district}"
-    
     async def get_crop_price(self, state: str, commodity: str, district: Optional[str] = None) -> Dict[str, Any]:
-        """Fetch crop prices from MCP Gateway using proper MCP protocol"""
+        """Fetch crop prices using integrated tools"""
         arguments = {"state": state, "commodity": commodity}
-        # Always include district parameter (even if empty) as the API requires it
-        arguments["district"] = district or ""
+        if district:
+            arguments["district"] = district
             
-        result = await self._call_mcp_tool("crop-price", arguments)
+        result = await self.tools.call_tool("crop-price", arguments)
         
         # Ensure consistent response format
         if "error" in result:
@@ -422,24 +460,24 @@ class MCPGatewayClient:
             return {"data": result.get("data", result), "error": None}
     
     async def search_web(self, query: str, num_results: int = 5) -> Dict[str, Any]:
-        """Search web using MCP Gateway EXA search with proper MCP protocol"""
+        """Search web using integrated EXA search"""
         arguments = {
             "query": query,
             "num_results": num_results
         }
         
-        # Don't pass API key in arguments - it should be configured in the MCP server
-        result = await self._call_mcp_tool("search", arguments)
+        result = await self.tools.call_tool("search", arguments)
         
         # Ensure consistent response format
         if "error" in result:
             return {"error": result["error"], "results": []}
         else:
-            return {"results": result.get("results", result.get("data", [])), "error": None}
+            data = result.get("data", result)
+            return {"results": data.get("results", []), "error": None}
     
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Generic method to call any MCP tool"""
-        result = await self._call_mcp_tool(tool_name, arguments)
+        """Generic method to call any integrated tool"""
+        result = await self.tools.call_tool(tool_name, arguments)
         
         # Ensure consistent response format
         if "error" in result:
@@ -448,35 +486,16 @@ class MCPGatewayClient:
             return {"data": result.get("data", result), "error": None}
     
     async def health_check(self) -> Dict[str, Any]:
-        """Check MCP Gateway health and available tools"""
+        """Check integrated tools health"""
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                # Check gateway health
-                health_response = await client.get(f"{self.base_url}/health")
-                health_response.raise_for_status()
-                
-                # List available tools using JSON-RPC
-                tools_payload = {
-                    "jsonrpc": "2.0",
-                    "id": 1,
-                    "method": "list_tools"
-                }
-                
-                tools_response = await client.post(
-                    self.rpc_endpoint,
-                    json=tools_payload,
-                    headers=self._get_headers()
-                )
-                tools_response.raise_for_status()
-                tools_result = tools_response.json()
-                
-                return {
-                    "status": "healthy",
-                    "gateway_health": health_response.json(),
-                    "available_tools": tools_result.get("result", [])
-                }
+            available_tools = self.tools.get_available_tools()
+            return {
+                "status": "healthy",
+                "available_tools": available_tools,
+                "source": "integrated_tools"
+            }
         except Exception as e:
-            logger.error(f"MCP Gateway health check failed: {e}")
+            logger.error(f"Integrated tools health check failed: {e}")
             return {"status": "unhealthy", "error": str(e)}
 
 class CerebrasService:
@@ -511,10 +530,10 @@ class CerebrasService:
 
 # Initialize services with proper error handling
 try:
-    mcp_client = MCPGatewayClient(MCP_GATEWAY_URL, MCP_GATEWAY_TOKEN)
+    mcp_client = IntegratedToolsClient()
     cerebras_service = CerebrasService(CEREBRAS_API_KEY)
     media_analysis_service = MediaAnalysisService(OPENROUTER_API_KEY) if OPENROUTER_API_KEY else None
-    logger.info(f"Initialized MCP Gateway client for: {MCP_GATEWAY_URL}")
+    logger.info("Initialized integrated agricultural tools client")
     if MCP_GATEWAY_TOKEN:
         logger.info("MCP Gateway authentication token configured")
     if media_analysis_service:
@@ -526,7 +545,7 @@ except Exception as e:
 # ==================== Agentic Reasoning System ====================
 
 class AgenticChatService:
-    def __init__(self, cerebras_service: CerebrasService, mcp_client: MCPGatewayClient, database):
+    def __init__(self, cerebras_service: CerebrasService, mcp_client: IntegratedToolsClient, database):
         self.cerebras = cerebras_service
         self.mcp = mcp_client
         self.db = database
@@ -561,6 +580,7 @@ IMPORTANT RULES:
    - weather: Weather forecasts, irrigation planning, pest risk alerts
    - pest-identifier: Pest/disease identification and treatment recommendations
    - mandi-price: Market price trends, predictions, best market recommendations
+   - scheme-tool: Crop damage, insurance claims, government relief schemes, compensation, natural calamities, weather damage, crop loss assistance
    - none: Use base LLM knowledge for general farming advice
 4. Detect language: en, hi, ta, te, mr, bn, gu, kn, ml, pa
 5. Determine reasoning complexity:
@@ -580,8 +600,10 @@ Respond in JSON format:
   "needs_weather": true/false,
   "needs_pest_identifier": true/false,
   "needs_mandi_price": true/false,
+  "needs_scheme_tool": true/false,
   "crop_price_params": {"state": "...", "commodity": "...", "district": "..."},
   "search_query": "...",
+  "scheme_tool_params": {"damage_type": "drought|flood|cyclone|hailstorm|pest_attack|disease|fire", "crop_type": "...", "state": "...", "district": "...", "damage_extent": "minor|moderate|severe|complete", "has_insurance": true/false, "insurance_type": "pmfby|wbcis|private|none"},
   "reasoning_steps": ["step1", "step2", "step3"],
   "synthesis_requirements": ["correlation1", "correlation2"],
   "confidence": 0.0-1.0,
@@ -592,6 +614,9 @@ Examples:
 - "Best practices for rice cultivation" → needs_web_search: false (use base knowledge)
 - "Latest news on wheat prices" → needs_web_search: true (recent/current data)
 - "Current price of cotton in Punjab" → needs_crop_price: true
+- "My rice crop is damaged due to flood" → needs_scheme_tool: true
+- "Need help with crop insurance claim" → needs_scheme_tool: true
+- "Drought destroyed my wheat field" → needs_scheme_tool: true
 - "Tell me a joke" → is_agricultural: false"""
         
         messages = [
@@ -736,6 +761,21 @@ Examples:
                 logger.info(f"Mandi-price tool failed: {result}")
                 tool_results["mandi_price"] = result
         
+        # Execute scheme tool
+        if analysis.get("needs_scheme_tool"):
+            params = analysis.get("scheme_tool_params", {})
+            logger.info(f"Calling scheme-tool with params: {params}")
+            result = await self.mcp.call_tool("scheme-tool", params)
+            logger.info(f"Scheme-tool result: {result}")
+            
+            if result and not result.get("error"):
+                tool_results["scheme_tool"] = result
+                tools_used.append("scheme-tool")
+                logger.info("Scheme-tool executed successfully")
+            else:
+                logger.info(f"Scheme-tool failed: {result}")
+                tool_results["scheme_tool"] = result
+        
         return {"results": tool_results, "tools_used": tools_used}
     
     async def synthesize_data(self, analysis: Dict[str, Any], tool_results: Dict[str, Any]) -> Dict[str, Any]:
@@ -874,6 +914,34 @@ Focus on practical agricultural insights that help farmers make better decisions
                     tool_failures.append("web search returned no current results")
             else:
                 tool_failures.append("web search could not be completed")
+        
+        if tool_results.get("scheme_tool"):
+            scheme_data = tool_results["scheme_tool"]
+            if scheme_data.get("data") and not scheme_data.get("error"):
+                data = scheme_data.get("data", {})
+                farmer_situation = data.get("farmer_situation", {})
+                recommendations = data.get("recommendations", [])
+                action_plan = data.get("action_plan", {})
+                estimated_compensation = data.get("estimated_compensation", 0)
+                
+                context_info += f"🚨 CROP DAMAGE ASSISTANCE AVAILABLE:\n"
+                context_info += f"Damage Type: {farmer_situation.get('damage_type', 'Unknown')}\n"
+                context_info += f"Crop Affected: {farmer_situation.get('crop_type', 'Unknown')}\n"
+                context_info += f"Damage Extent: {farmer_situation.get('damage_extent', 'Unknown')}\n"
+                if estimated_compensation > 0:
+                    context_info += f"Estimated Compensation: ₹{estimated_compensation:,}\n"
+                
+                if recommendations:
+                    context_info += f"Available Schemes: {len(recommendations)} schemes found\n"
+                    for i, rec in enumerate(recommendations[:3], 1):  # Show top 3
+                        context_info += f"{i}. {rec.get('name', 'Unknown Scheme')}\n"
+                
+                if action_plan.get("immediate_actions"):
+                    context_info += f"Immediate Actions Required: {len(action_plan['immediate_actions'])} steps\n"
+                
+                context_info += f"Scheme assistance data available for detailed guidance.\n"
+            else:
+                tool_failures.append("scheme assistance data could not be retrieved")
         
         # Add information about tool failures to help the AI respond appropriately
         if tool_failures:
@@ -1112,53 +1180,109 @@ agentic_service = AgenticChatService(cerebras_service, mcp_client, db)
 
 # ==================== API Routes ====================
 
-@api_router.post("/auth/register", response_model=Token)
-async def register(user_data: UserCreate):
-    """Register a new user"""
-    # Check if user exists
-    existing_user = await db.users.find_one({"email": user_data.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    # Create new user
-    user = User(
-        email=user_data.email,
-        password_hash=hash_password(user_data.password)
-    )
-    
-    user_dict = user.dict()
-    user_dict['created_at'] = user_dict['created_at'].isoformat()
-    
-    await db.users.insert_one(user_dict)
-    
-    # Generate token
-    access_token = create_access_token(user.id, user.email)
-    
-    return Token(
-        access_token=access_token,
-        user_id=user.id,
-        email=user.email
-    )
+@api_router.post("/auth/send-otp", response_model=OTPResponse)
+async def send_otp(request: PhoneNumberRequest):
+    """Send OTP to phone number"""
+    try:
+        # Validate phone number
+        if not validate_indian_phone(request.phone_number):
+            raise HTTPException(status_code=400, detail="Invalid Indian mobile number format")
+        
+        # Normalize phone number
+        normalized_phone = normalize_phone_number(request.phone_number)
+        
+        # Generate OTP
+        otp = otp_service.generate_otp(normalized_phone)
+        
+        # Send SMS (mock implementation)
+        await otp_service.send_otp_sms(normalized_phone, otp)
+        
+        return OTPResponse(
+            success=True,
+            message=f"OTP sent to {normalized_phone}",
+            expires_in=300
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sending OTP: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send OTP")
 
-@api_router.post("/auth/login", response_model=Token)
-async def login(credentials: UserLogin):
-    """Login user"""
-    user = await db.users.find_one({"email": credentials.email})
-    
-    if not user or not verify_password(credentials.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    access_token = create_access_token(user["id"], user["email"])
-    
-    return Token(
-        access_token=access_token,
-        user_id=user["id"],
-        email=user["email"]
-    )
+@api_router.post("/auth/verify-otp", response_model=Token)
+async def verify_otp(request: OTPVerificationRequest):
+    """Verify OTP and login/register user"""
+    try:
+        # Validate phone number
+        if not validate_indian_phone(request.phone_number):
+            raise HTTPException(status_code=400, detail="Invalid Indian mobile number format")
+        
+        # Normalize phone number
+        normalized_phone = normalize_phone_number(request.phone_number)
+        
+        # Verify OTP
+        if not otp_service.verify_otp(normalized_phone, request.otp):
+            raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({"phone_number": normalized_phone})
+        
+        is_new_user = False
+        
+        if existing_user:
+            # Update last login
+            await db.users.update_one(
+                {"phone_number": normalized_phone},
+                {"$set": {"last_login": datetime.now(timezone.utc).isoformat(), "is_verified": True}}
+            )
+            user_id = existing_user["id"]
+        else:
+            # Create new user (auto-registration)
+            user = User(
+                phone_number=normalized_phone,
+                is_verified=True,
+                last_login=datetime.now(timezone.utc)
+            )
+            
+            user_dict = user.dict()
+            user_dict['created_at'] = user_dict['created_at'].isoformat()
+            user_dict['last_login'] = user_dict['last_login'].isoformat()
+            
+            await db.users.insert_one(user_dict)
+            user_id = user.id
+            is_new_user = True
+        
+        # Generate token
+        access_token = create_access_token(user_id, normalized_phone)
+        
+        return Token(
+            access_token=access_token,
+            user_id=user_id,
+            phone_number=normalized_phone,
+            is_new_user=is_new_user
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying OTP: {e}")
+        raise HTTPException(status_code=500, detail="OTP verification failed")
 
 @api_router.get("/auth/me")
 async def get_current_user_info(current_user: Dict = Depends(get_current_user)):
     """Get current user info"""
+    # Get full user details from database
+    user = await db.users.find_one({"id": current_user["user_id"]})
+    if user:
+        return {
+            "user_id": user["id"],
+            "phone_number": user["phone_number"],
+            "name": user.get("name"),
+            "location": user.get("location"),
+            "is_verified": user.get("is_verified", False),
+            "created_at": user.get("created_at"),
+            "last_login": user.get("last_login")
+        }
     return current_user
 
 @api_router.post("/chat", response_model=ChatResponse)
@@ -2045,7 +2169,7 @@ async def health_check():
                 "database": "connected",
                 "mcp_gateway": mcp_health
             },
-            "mcp_gateway_url": MCP_GATEWAY_URL,
+            "tools_source": "integrated",
             "features": {
                 "multi_agent_reasoning": True,
                 "cerebras_llama_3_1": True,
@@ -2059,7 +2183,7 @@ async def health_check():
             "status": "degraded",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "error": str(e),
-            "mcp_gateway_url": MCP_GATEWAY_URL
+            "tools_source": "integrated"
         }
 
 @api_router.get("/health")
@@ -2083,10 +2207,10 @@ async def health_check():
         
         # Check MCP Gateway
         mcp_status = "unknown"
+        # Check integrated tools health
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{MCP_GATEWAY_URL}/health")
-                mcp_status = "healthy" if response.status_code == 200 else f"unhealthy: {response.status_code}"
+            tools_health = await mcp_client.health_check()
+            mcp_status = tools_health.get("status", "unknown")
         except Exception as e:
             mcp_status = f"unhealthy: {str(e)}"
         

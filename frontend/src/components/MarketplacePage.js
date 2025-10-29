@@ -8,6 +8,13 @@ const API = `${BACKEND_URL}/api`;
 
 function MarketplacePage({ user, onLogout }) {
   const navigate = useNavigate();
+  
+  // Safety check - redirect to auth if user is not available
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+  
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const t = useTranslation(currentLanguage) || {};
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'manage'
@@ -42,7 +49,7 @@ function MarketplacePage({ user, onLogout }) {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      const response = await axios.get(`${API}/surplus/user/${user.user_id}`, {
+      const response = await axios.get(`${API}/surplus/user/${user?.user_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
